@@ -1,4 +1,5 @@
 import ComponentsBuilder from './components.js'
+import { constants } from './constants.js'
 
 export default class TerminalController {
     #usersCollors = new Map()
@@ -38,7 +39,6 @@ export default class TerminalController {
     }
 
     #onLogChange({ screen, activityLog }) {
-
         return msg => {
             const [userName] = msg.split(/\s/)
             const color = this.#getUserColor(userName)
@@ -48,9 +48,27 @@ export default class TerminalController {
         }
     }
 
+    #onStatusChange({ screen, status }){
+        return users => {
+
+            // pega o primeiro elemento da lista, que é o titulo
+            const { content } = status.items.shift()
+            status.clearItems()
+            status.addItem(content)
+
+            users.forEach(userName => {
+                const color = this.#getUserColor(userName)
+                status.addItem(`{${color}}{bold}${userName}{/}`)
+            })
+
+            screen.render()
+        }
+    }
+
     #registerEvents(eventEmitter, components) {
-        eventEmitter.on('message:received', this.#onMessageReceived(components))
-        eventEmitter.on('activityLog:updated', this.#onLogChange(components))
+        eventEmitter.on(constants.events.app.MESSAGE_RECEIVED, this.#onMessageReceived(components))
+        eventEmitter.on(constants.events.app.ACTIVITY_LOG_UPDATED, this.#onLogChange(components))
+        eventEmitter.on(constants.events.app.STATUS_UPDATED, this.#onStatusChange(components))
     }
 
     async initializeTable(eventEmitter) {
@@ -68,11 +86,5 @@ export default class TerminalController {
         components.input.focus()
         components.screen.render()
 
-        let n = 1
-        setInterval(() => {
-            eventEmitter.emit('message:received', {message: 'hey', userName: `Joao_${n}`})
-            eventEmitter.emit('activityLog:updated', `Joao_${n} join`)
-            n = n+1
-        }, 1000)
     }
 }
