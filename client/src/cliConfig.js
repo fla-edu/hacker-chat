@@ -26,6 +26,6 @@ export default class CliConfig {
             )
         }
 
-        return new ClifConfig(Object.fromEntries(cmd))
+        return new CliConfig(Object.fromEntries(cmd))
     }
 }
